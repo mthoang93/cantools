@@ -1462,6 +1462,8 @@ class SystemLoader:
 
         # Default values.
         raw_initial = None
+        compute_method_name = None
+        compute_method_type = None
         minimum = None
         maximum = None
         factor = 1.0
@@ -1491,7 +1493,7 @@ class SystemLoader:
 
         if system_signal is not None:
             # Minimum, maximum, factor, offset and choices.
-            minimum, maximum, factor, offset, choices, unit, comments = \
+            compute_method_name, minimum, maximum, factor, offset, choices, unit, comments, compute_method_type = \
                 self._load_system_signal(system_signal, is_float)
 
         # loading initial values is way too complicated, so it is the
@@ -1507,6 +1509,8 @@ class SystemLoader:
         raw_invalid = self._load_arxml_invalid_int_value(i_signal, system_signal)
 
         conversion = BaseConversion.factory(
+            name=compute_method_name,
+            type = compute_method_type,
             scale=factor,
             offset=offset,
             choices=choices,
@@ -1903,11 +1907,13 @@ class SystemLoader:
         return minimum, maximum, factor, offset, choices
 
     def _load_system_signal(self, system_signal, is_float):
+        name = None
         minimum = None
         maximum = None
         factor = 1.0
         offset = 0.0
         choices = None
+        category = None
 
         compu_method = self._get_compu_method(system_signal)
 
@@ -1916,13 +1922,19 @@ class SystemLoader:
         comments = self._load_comments(system_signal)
 
         if compu_method is not None:
+            # Compute Method name
+            name = self._get_unique_arxml_child(compu_method, 'SHORT-NAME')
             category = self._get_unique_arxml_child(compu_method, 'CATEGORY')
+
+            if name is not None:
+                name = name.text
 
             if category is None:
                 # if no category is specified, we assume that the
                 # physical value of the signal corresponds to its
                 # binary representation.
-                return (minimum,
+                return (name,
+                        minimum,
                         maximum,
                         factor,
                         offset,
@@ -1949,13 +1961,15 @@ class SystemLoader:
                              category)
 
         return \
+            name, \
             minimum, \
             maximum, \
             1.0 if factor is None else factor, \
             0.0 if offset is None else offset, \
             choices, \
             unit, \
-            comments
+            comments, \
+            category
 
     def _load_signal_type(self, i_signal):
         is_signed = False
