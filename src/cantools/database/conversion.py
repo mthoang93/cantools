@@ -7,6 +7,12 @@ from .namedsignalvalue import NamedSignalValue
 
 class BaseConversion(ABC):
     """The BaseConversion class defines the interface for all signal conversion classes."""
+    
+    #: Name of the conversion
+    name: str
+
+    #: Type of the conversion
+    type: str
 
     #: the scaling factor of the conversion
     scale: float
@@ -23,6 +29,8 @@ class BaseConversion(ABC):
 
     @staticmethod
     def factory(
+        name: str = None,
+        type: str = None,
         scale: float = 1,
         offset: float = 0,
         choices: Optional[Choices] = None,
@@ -47,19 +55,21 @@ class BaseConversion(ABC):
         """
         if choices is None:
             if scale == 1 and offset == 0:
-                return IdentityConversion(is_float=is_float)
+                return IdentityConversion(name=name, type=type, is_float=is_float)
 
             if _is_integer(scale) and _is_integer(offset) and not is_float:
-                return LinearIntegerConversion(scale=int(scale), offset=int(offset))
+                return LinearIntegerConversion(name=name, type=type, scale=int(scale), offset=int(offset))
 
             return LinearConversion(
+                name=name,
+                type=type,
                 scale=scale,
                 offset=offset,
                 is_float=is_float,
             )
 
         return NamedSignalConversion(
-            scale=scale, offset=offset, choices=choices, is_float=is_float
+            name=name, type=type, scale=scale, offset=offset, choices=choices, is_float=is_float
         )
 
     @abstractmethod
@@ -117,7 +127,9 @@ class IdentityConversion(BaseConversion):
     offset = 0
     choices = None
 
-    def __init__(self, is_float: bool) -> None:
+    def __init__(self, is_float: bool, name: str=None, type: str = None) -> None:
+        self.name = name
+        self.type = type
         self.is_float = is_float
 
     def raw_to_scaled(
@@ -140,14 +152,16 @@ class IdentityConversion(BaseConversion):
         return scaled_value if self.is_float else round(scaled_value)
 
     def __repr__(self) -> str:
-        return f"{self.__class__.__name__}(is_float={self.is_float})"
+        return f"{self.__class__.__name__}(name={self.name}, is_float={self.is_float})"
 
 
 class LinearIntegerConversion(BaseConversion):
     is_float = False
     choices = None
 
-    def __init__(self, scale: int, offset: int) -> None:
+    def __init__(self, scale: int, offset: int, name: str = None, type: str = None) -> None:
+        self.name = name
+        self.type = type
         self.scale: int = scale
         self.offset: int = offset
 
@@ -178,13 +192,15 @@ class LinearIntegerConversion(BaseConversion):
         return round(_raw)
 
     def __repr__(self) -> str:
-        return f"{self.__class__.__name__}(scale={self.scale}, offset={self.offset})"
+        return f"{self.__class__.__name__}(name={self.name}, scale={self.scale}, offset={self.offset})"
 
 
 class LinearConversion(BaseConversion):
     choices = None
 
-    def __init__(self, scale: float, offset: float, is_float: bool) -> None:
+    def __init__(self, scale: float, offset: float, is_float: bool, name: str = None, type: str = None) -> None:
+        self.name = name
+        self.type = type
         self.scale = scale
         self.offset = offset
         self.is_float = is_float
@@ -212,6 +228,7 @@ class LinearConversion(BaseConversion):
     def __repr__(self) -> str:
         return (
             f"{self.__class__.__name__}("
+            f"name={self.name}, "
             f"scale={self.scale}, "
             f"offset={self.offset}, "
             f"is_float={self.is_float})"
@@ -220,8 +237,10 @@ class LinearConversion(BaseConversion):
 
 class NamedSignalConversion(BaseConversion):
     def __init__(
-        self, scale: float, offset: float, choices: Choices, is_float: bool
+        self, scale: float, offset: float, choices: Choices, is_float: bool, name: str = None, type: str = None
     ) -> None:
+        self.name = name
+        self.type = type
         self.scale = scale
         self.offset = offset
         self.is_float = is_float
@@ -283,6 +302,7 @@ class NamedSignalConversion(BaseConversion):
         choices = f"{{{list_of_choices}}}"
         return (
             f"{self.__class__.__name__}("
+            f"name={self.name}, "
             f"scale={self.scale}, "
             f"offset={self.offset}, "
             f"choices={choices}, "
