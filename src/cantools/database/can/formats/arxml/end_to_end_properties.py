@@ -10,6 +10,8 @@ class AutosarEnd2EndProperties:
         self._category: Optional[str] = None
         self._data_ids: Optional[List[int]] = None
         self._payload_length: int = 0
+        self._offset: int = 0
+        self._max_delta_counter: int = 0
 
     @property
     def category(self) -> Optional[str]:
@@ -48,3 +50,25 @@ class AutosarEnd2EndProperties:
     @payload_length.setter
     def payload_length(self, value: int) -> None:
         self._payload_length = value
+
+    @property
+    def offset(self) -> int:
+        """Header offset
+
+        """
+        return self._offset
+
+    @offset.setter
+    def offset(self, value: int) -> None:
+        self._offset = value
+
+    @property
+    def max_delta_counter(self) -> int:
+        """Max Delta Counter
+
+        """
+        return self._max_delta_counter
+
+    @max_delta_counter.setter
+    def max_delta_counter(self, value: int) -> None:
+        self._max_delta_counter = value

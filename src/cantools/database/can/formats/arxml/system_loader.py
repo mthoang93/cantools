@@ -1432,11 +1432,33 @@ class SystemLoader:
         data_ids = []
         for did_elem in did_elems:
             data_ids.append(parse_number_string(did_elem.text))
+        
+        offset_elem = self._get_unique_arxml_child(trans_props, [
+            '&TRANSFORMER',
+            'TRANSFORMATION-DESCRIPTIONS',
+            'END-TO-END-TRANSFORMATION-DESCRIPTION',
+            'OFFSET',])
+
+        offset = None
+        if offset_elem is not None:
+            offset = parse_number_string(offset_elem.text)
+
+        max_delta_counter_elem = self._get_unique_arxml_child(trans_props, [
+            '&TRANSFORMER',
+            'TRANSFORMATION-DESCRIPTIONS',
+            'END-TO-END-TRANSFORMATION-DESCRIPTION',
+            'MAX-DELTA-COUNTER',])
+
+        max_delta_counter = None
+        if max_delta_counter_elem is not None:
+            max_delta_counter = parse_number_string(max_delta_counter_elem.text)
 
         e2e_props = AutosarEnd2EndProperties()
         e2e_props.category = category
         e2e_props.data_ids = data_ids
         e2e_props.payload_length = pdu_length
+        e2e_props.offset = offset
+        e2e_props.max_delta_counter = max_delta_counter
         autosar_specifics.e2e = e2e_props
 
     def _load_signal(self, i_signal_to_i_pdu_mapping):
